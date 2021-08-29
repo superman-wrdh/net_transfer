@@ -1,5 +1,8 @@
 ## tcp文件传输
 
+#### 功能
+    tcp传输文件 支持大文件,支持文件和文件夹,单文件最大支持4GB
+
 #### 编译
     Macos sh  build-darwin.sh
     Linux sh build-linux.sh 
