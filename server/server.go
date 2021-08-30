@@ -112,11 +112,7 @@ func FileHandler(conn net.Conn) {
 			}
 			if utils.FileMd5(tmpFileName) == meta.Md5 {
 				// 将临时文件重命名成正式文件
-				finalName := fmt.Sprintf("%s%s%s",
-					strings.Join(meta.Folders,
-						string(os.PathSeparator)),
-					string(os.PathSeparator), meta.Name)
-				os.Rename(tmpFileName, finalName)
+				os.Rename(tmpFileName, tmpFileName[:len(tmpFileName)-4])
 				fmt.Printf("MD5校验通过,本次文件传输完成 耗时%.2fs 速度%s/s \n", float64(cost)/float64(1000), utils.HumanSize((1000*meta.Size)/cost))
 			} else {
 				fmt.Println("MD5校验不通过 文件损坏")
