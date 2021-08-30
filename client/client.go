@@ -26,7 +26,18 @@ func StartClient(ip, port string) {
 	fmt.Println("connect ", addr)
 	conn, err := net.Dial("tcp", addr)
 	HandleError(err, "client conn error")
+
 	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("请输入用户名")
+	UserNameByte, _, _ := reader.ReadLine()
+	fmt.Println("请输入密码")
+	PasswordByte, _, _ := reader.ReadLine()
+
+	authStatus := utils.ClientAuth(conn, string(UserNameByte), string(PasswordByte))
+	if !authStatus {
+		fmt.Println("用户名密码错误")
+		return
+	}
 	for {
 		fmt.Println("请输入文件/文件夹路径(退出请输入quit)")
 		lineByte, _, _ := reader.ReadLine()

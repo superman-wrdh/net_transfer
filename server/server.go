@@ -25,7 +25,16 @@ func StartServer(ip, port string) {
 		conn, e := listener.Accept()
 		ServerHandleError(e, "listener.accept")
 		fmt.Printf("%s connected \n", conn.RemoteAddr().String())
-		go FileHandler(conn)
+		verify := utils.ServerVerify(conn)
+		if verify {
+			conn.Write(define.DATA_SEND_OK)
+			go FileHandler(conn)
+		} else {
+			fmt.Printf("%s 验证失败 \n", conn.RemoteAddr().String())
+			conn.Write(define.DATA_SEND_FAIL)
+			conn.Close()
+		}
+
 	}
 }
 

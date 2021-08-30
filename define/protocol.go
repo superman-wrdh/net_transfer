@@ -7,3 +7,8 @@ type FileMeta struct {
 	Md5       string   `json:"md5"`
 	Folders   []string `json:"folders"`
 }
+
+type UserAuth struct {
+	UserName string `json:"user_name"`
+	Password string `json:"password"`
+}

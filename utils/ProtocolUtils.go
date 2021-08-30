@@ -48,3 +48,45 @@ func GetReceiveFileMeta(conn net.Conn) (define.FileMeta, error) {
 	}
 	return meta, nil
 }
+
+func ClientAuth(conn net.Conn, userName, password string) bool {
+	buffer := make([]byte, define.BLOCKSIZE)
+	copy(buffer[:4], define.DATA_USER_AUTH)
+	auth := define.UserAuth{
+		UserName: userName,
+		Password: password,
+	}
+	userByte, err := json.Marshal(auth)
+	if err != nil {
+		return false
+	}
+	bodySize := len(userByte)
+	binary.BigEndian.PutUint32(buffer[4:8], uint32(bodySize))
+	copy(buffer[8:8+bodySize], userByte)
+	conn.Write(buffer[:8+bodySize])
+	resp := make([]byte, 4)
+	io.ReadFull(conn, resp)
+	if bytes.Equal(resp, define.DATA_SEND_OK) {
+		return true
+	}
+	return false
+}
+
+func ServerVerify(conn net.Conn) bool {
+	Head := make([]byte, 8)
+	io.ReadFull(conn, Head)
+	if bytes.Equal(Head[:4], define.DATA_USER_AUTH) {
+		bodySize := binary.BigEndian.Uint32(Head[4:8])
+		Body := make([]byte, bodySize)
+		io.ReadFull(conn, Body)
+		u := define.UserAuth{}
+		err := json.Unmarshal(Body, &u)
+		if err != nil {
+			return false
+		}
+		if u.UserName == define.DEFAULT_USER && u.Password == define.DEFAULT_PASSWORD {
+			return true
+		}
+	}
+	return false
+}
