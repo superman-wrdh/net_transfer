@@ -27,14 +27,20 @@ func StartClient(ip, port string) {
 	conn, err := net.Dial("tcp", addr)
 	HandleError(err, "client conn error")
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("请输入本地文件地址")
-	lineByte, _, _ := reader.ReadLine()
-	line := string(lineByte)
-	fileList := utils.PathFileListInfo(line)
-	for _, meta := range fileList {
-		meta.Md5 = utils.FileMd5(meta.LocalPath)
-		SendFile(conn, meta)
+	for {
+		fmt.Println("请输入文件/文件夹路径(退出请输入quit)")
+		lineByte, _, _ := reader.ReadLine()
+		line := string(lineByte)
+		if line == "q" || line == "quit" {
+			return
+		}
+		fileList := utils.PathFileListInfo(line)
+		for _, meta := range fileList {
+			meta.Md5 = utils.FileMd5(meta.LocalPath)
+			SendFile(conn, meta)
+		}
 	}
+
 }
 
 func SendFile(conn net.Conn, fileMata define.FileMeta) {
