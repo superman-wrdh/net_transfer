@@ -116,15 +116,25 @@ func FileHandler(conn net.Conn) {
 			cost := end - start
 			bar.Finish()
 			if cost == 0 {
-				// 小文件传输速度很快 花费时间为0
+				// 小文件传输速度很快 花费时间为0 就算100ms
 				cost = 100
 			}
-			if utils.FileMd5(tmpFileName) == meta.Md5 {
-				// 将临时文件重命名成正式文件
-				os.Rename(tmpFileName, tmpFileName[:len(tmpFileName)-4])
-				fmt.Printf("MD5校验通过,本次文件传输完成 耗时%.2fs 速度%s/s \n", float64(cost)/float64(1000), utils.HumanSize((1000*meta.Size)/cost))
+			fileMd5, err := utils.FileMd5(tmpFileName)
+			if err == nil {
+				if fileMd5 == meta.Md5 {
+					// 将临时文件重命名成正式文件
+					err := os.Rename(tmpFileName, tmpFileName[:len(tmpFileName)-4])
+					if err == nil {
+						fmt.Printf("MD5校验通过,本次文件传输完成 耗时%.2fs 速度%s/s \n", float64(cost)/float64(1000), utils.HumanSize((1000*meta.Size)/cost))
+					} else {
+						fmt.Printf("文件重命名失败,%v", err.Error())
+					}
+
+				} else {
+					fmt.Println("MD5校验不通过 文件损坏")
+				}
 			} else {
-				fmt.Println("MD5校验不通过 文件损坏")
+				fmt.Printf("计算文件md5失败,%v", err.Error())
 			}
 
 			start = 0

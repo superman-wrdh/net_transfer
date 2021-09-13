@@ -47,7 +47,12 @@ func StartClient(ip, port string) {
 		}
 		fileList := utils.PathFileListInfo(line)
 		for _, meta := range fileList {
-			meta.Md5 = utils.FileMd5(meta.LocalPath)
+			fileMd5, err := utils.FileMd5(meta.LocalPath)
+			if err != nil {
+				fmt.Printf("计算文件med出错,文件传输跳过%s %v", meta.Name, err.Error())
+				return
+			}
+			meta.Md5 = fileMd5
 			SendFile(conn, meta)
 		}
 	}

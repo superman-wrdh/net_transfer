@@ -11,18 +11,18 @@ import (
 	"strings"
 )
 
-func FileMd5(FilePath string) string {
+func FileMd5(FilePath string) (string, error) {
 	file, err := os.Open(FilePath)
 	if err != nil {
 		log.Panicln("读取文件出错")
-		panic(err)
+		return "", err
 	}
 	defer file.Close()
 	md5Hash := md5.New()
 	if _, err := io.Copy(md5Hash, file); err != nil {
-		panic(err)
+		return "", err
 	}
-	return fmt.Sprintf("%x", md5Hash.Sum(nil))
+	return fmt.Sprintf("%x", md5Hash.Sum(nil)), nil
 }
 
 func BytesMd5(bytes []byte) string {
@@ -120,7 +120,10 @@ func MakeFileMeta(filePath string, md5Cal bool) (define.FileMeta, error) {
 	_, name := filepath.Split(filePath)
 	fileMd5 := ""
 	if md5Cal {
-		fileMd5 = FileMd5(filePath)
+		fileMd5, err = FileMd5(filePath)
+		if err != nil {
+			return define.FileMeta{}, err
+		}
 	}
 	meta := define.FileMeta{
 		Name:      name,
