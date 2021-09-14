@@ -30,8 +30,8 @@ func TimeOutCheck(conn net.Conn, success, callback chan int) {
 		return
 	case <-ticker.C:
 		callback <- 0
-		os.Exit(1)
 		conn.Close()
+		os.Exit(1)
 		return
 	}
 }
