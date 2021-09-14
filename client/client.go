@@ -21,6 +21,21 @@ func HandleError(err error, when string) {
 	}
 }
 
+func TimeOutCheck(conn net.Conn, success, callback chan int) {
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+	select {
+	case <-success:
+		callback <- 1
+		return
+	case <-ticker.C:
+		callback <- 0
+		os.Exit(1)
+		conn.Close()
+		return
+	}
+}
+
 func StartClient(ip, port string) {
 	addr := fmt.Sprintf("%s:%s", ip, port)
 	fmt.Println("connect ", addr)
@@ -28,16 +43,19 @@ func StartClient(ip, port string) {
 	HandleError(err, "client conn error")
 
 	reader := bufio.NewReader(os.Stdin)
+	success := make(chan int, 1)
+	callback := make(chan int, 1)
+	go TimeOutCheck(conn, success, callback)
 	fmt.Println("请输入用户名")
 	UserNameByte, _, _ := reader.ReadLine()
 	fmt.Println("请输入密码")
 	PasswordByte, _, _ := reader.ReadLine()
-
 	authStatus := utils.ClientAuth(conn, string(UserNameByte), string(PasswordByte))
 	if !authStatus {
 		fmt.Println("用户名密码错误")
 		return
 	}
+	success <- 1
 	for {
 		fmt.Println("请输入文件/文件夹路径(退出请输入quit)")
 		lineByte, _, _ := reader.ReadLine()
@@ -56,7 +74,14 @@ func StartClient(ip, port string) {
 			SendFile(conn, meta)
 		}
 	}
+}
 
+func CheckConnIsAlive(conn net.Conn) bool {
+	_, err := conn.Read(make([]byte, 0))
+	if err != io.EOF {
+		return false
+	}
+	return true
 }
 
 func SendFile(conn net.Conn, fileMata define.FileMeta) {
