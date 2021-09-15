@@ -25,10 +25,21 @@ func StartServer(ip, port string) {
 		conn, e := listener.Accept()
 		ServerHandleError(e, "listener.accept")
 		fmt.Printf("%s connected \n", conn.RemoteAddr().String())
+
+		success := make(chan int, 1)
+		callback := make(chan int, 1)
+		go TimeOutCheck(conn, success, callback)
+
 		verify := utils.ServerVerify(conn)
 		if verify {
-			conn.Write(define.DATA_SEND_OK)
-			go FileHandler(conn)
+			success <- 1
+			alive := utils.CheckConnIsAlive(conn)
+			if alive {
+				conn.Write(define.DATA_SEND_OK)
+				go FileHandler(conn)
+			} else {
+				fmt.Printf("客户方在规定时间内没有认证 连接关闭")
+			}
 		} else {
 			fmt.Printf("%s 验证失败 \n", conn.RemoteAddr().String())
 			conn.Write(define.DATA_SEND_FAIL)
@@ -152,5 +163,21 @@ func FileHandler(conn net.Conn) {
 			//fmt.Println("未知协议")
 			return
 		}
+	}
+}
+
+func TimeOutCheck(conn net.Conn, success, callback chan int) {
+	ticker := time.NewTicker(20 * time.Second)
+	defer ticker.Stop()
+	select {
+	case <-success:
+		fmt.Printf("%s 完成验证 \n", conn.RemoteAddr().String())
+		callback <- 1
+		return
+	case <-ticker.C:
+		callback <- 0
+		fmt.Printf("%s 客户端超时未完成验证 \n", conn.RemoteAddr().String())
+		conn.Close()
+		return
 	}
 }

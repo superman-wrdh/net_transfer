@@ -76,14 +76,6 @@ func StartClient(ip, port string) {
 	}
 }
 
-func CheckConnIsAlive(conn net.Conn) bool {
-	_, err := conn.Read(make([]byte, 0))
-	if err != io.EOF {
-		return false
-	}
-	return true
-}
-
 func SendFile(conn net.Conn, fileMata define.FileMeta) {
 	fileLocalPath := fileMata.LocalPath
 	file, err := os.Open(fileLocalPath)

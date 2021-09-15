@@ -90,3 +90,11 @@ func ServerVerify(conn net.Conn) bool {
 	}
 	return false
 }
+
+func CheckConnIsAlive(conn net.Conn) bool {
+	_, err := conn.Read(make([]byte, 0))
+	if err != io.EOF {
+		return true
+	}
+	return false
+}
