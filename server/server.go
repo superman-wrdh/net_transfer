@@ -30,8 +30,9 @@ func StartServer(ip, port string) {
 		callback := make(chan int, 1)
 		go TimeOutCheck(conn, success, callback)
 
-		verify := utils.ServerVerify(conn)
+		authInfo, verify := utils.ServerVerify(conn)
 		if verify {
+			fmt.Printf("用户认证成功%s\n", authInfo.UserName)
 			success <- 1
 			alive := utils.CheckConnIsAlive(conn)
 			if alive {

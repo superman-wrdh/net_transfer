@@ -14,6 +14,7 @@ func main() {
 	ip := flag.String("ip", "0.0.0.0", "")
 	port := flag.String("port", "8888", "")
 	flag.Parse()
+	//server.StartProxy(*ip, *port)
 	//server.StartServer(*ip, *port)
 	//client.StartClient(*ip, *port)
 	if *op == "server" {
@@ -21,5 +22,7 @@ func main() {
 	} else if *op == "client" {
 		fmt.Println("start client")
 		client.StartClient(*ip, *port)
+	} else if *op == "proxy" {
+		server.StartProxy(*ip, *port)
 	}
 }

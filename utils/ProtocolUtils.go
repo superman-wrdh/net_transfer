@@ -72,23 +72,24 @@ func ClientAuth(conn net.Conn, userName, password string) bool {
 	return false
 }
 
-func ServerVerify(conn net.Conn) bool {
+func ServerVerify(conn net.Conn) (define.UserAuth, bool) {
 	Head := make([]byte, 8)
 	io.ReadFull(conn, Head)
+	u := define.UserAuth{}
 	if bytes.Equal(Head[:4], define.DATA_USER_AUTH) {
 		bodySize := binary.BigEndian.Uint32(Head[4:8])
 		Body := make([]byte, bodySize)
 		io.ReadFull(conn, Body)
-		u := define.UserAuth{}
+
 		err := json.Unmarshal(Body, &u)
 		if err != nil {
-			return false
+			return u, false
 		}
 		if u.UserName == define.DEFAULT_USER && u.Password == define.DEFAULT_PASSWORD {
-			return true
+			return u, true
 		}
 	}
-	return false
+	return u, false
 }
 
 func CheckConnIsAlive(conn net.Conn) bool {
